@@ -24,7 +24,7 @@ namespace BibliotecaAPI.Controllers
 
         }
 
-        [HttpGet("{id:int}")]
+        [HttpGet("{id:int}",Name ="ObtenerLibros")]
         public async Task<ActionResult<Libro>> Get(int id)
         {
             var libro = await context.Libros.Include(x=>x.Autor).FirstOrDefaultAsync(x => x.Id == id);
@@ -42,13 +42,16 @@ namespace BibliotecaAPI.Controllers
         {
             var Existeautor = await context.Autores.AnyAsync(x => x.Id == libro.AutorId);
 
+            //REALIZANDO UNA VALIDACION POR CONTROLADOR 
+
+            ModelState.AddModelError(nameof(libro.AutorId), $"El autor de id {libro.AutorId} no exitse");
             if (Existeautor == false)
             {
-                return BadRequest($"El autor de id {libro.AutorId} no exitse");
+                return ValidationProblem();
             }
             context.Libros.Add(libro);
             await context.SaveChangesAsync();
-            return Ok();
+            return CreatedAtRoute("ObtenerLibros", new{id = libro.Id},libro);
         }
 
         [HttpPut("{id:int}")]

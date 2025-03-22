@@ -10,6 +10,16 @@ namespace BibliotecaAPI.Validaciones
             {
                 return ValidationResult.Success;
             }
+
+            var valueString = value.ToString()!;
+            var primeraLetra = valueString[0].ToString();
+
+            if (primeraLetra != primeraLetra.ToUpper())
+            {
+                return new ValidationResult("La primera letra debe de estar en mayuscula");
+            }
+
+            return ValidationResult.Success;    
         }
     }
 }

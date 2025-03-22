@@ -1,4 +1,5 @@
-using BibliotecaAPI.Datos;
+  using BibliotecaAPI.Datos;
+using BibliotecaAPI.Middlewares;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using System.Text.Json.Serialization;
@@ -17,10 +18,16 @@ Console.WriteLine($"Connection String: {builder.Configuration.GetConnectionStrin
 
 var app = builder.Build();
 
+app.UseLogueaPeticion();
+
+app.UsebloqueaPeticion();
+
 //Area de middlewears
 app.MapControllers(); //cuando suceda una peticon http sea un controlador el que de respuesta y no una minimal API
 //un controlador es una clase que contiene un conjunto de acciones; Y una accion es una funcion que responde
 // a una peticion http
+
+
 
 
 app.Run();

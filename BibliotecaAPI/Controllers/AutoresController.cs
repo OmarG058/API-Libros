@@ -10,10 +10,12 @@ namespace BibliotecaAPI.Controllers
     public class AutoresController : ControllerBase //ControllerBase Me permite trabajar de maner sencilla co web APIS
     {
         private readonly ApplicationDbContext context;
+        private readonly ILogger<AutoresController> logger;
 
-        public AutoresController(ApplicationDbContext context) //shorthand ctor tab crea contructor 
+        public AutoresController(ApplicationDbContext context,ILogger <AutoresController> logger) //shorthand ctor tab crea contructor 
         {
             this.context = context; //control punto crear y asignar campo
+            this.logger = logger;
         }
 
 
@@ -21,6 +23,10 @@ namespace BibliotecaAPI.Controllers
         [HttpGet]
         //retornamos un IEnumerable de los autores que seria una colecion Obtener todos losArores
         public async Task<IEnumerable<Autor>> Get() {
+            logger.LogTrace("obteniendo el listado de autores");
+            logger.LogInformation("obteniendo listado de autores");//Ilogger permite mostar mesajes de lo que esta ocurriendo en la aplicacion 
+            logger.LogWarning("obteniendo el listado de autores"); //puedo modificarlos desde appsetingsJson para elegir cual se ejecute 
+            logger.LogCritical("obteniendo listado de autores");  //por defaoult es information. usa trace para bugs
 
             return await context.Autores.ToListAsync<Autor>();
         }
@@ -40,8 +46,8 @@ namespace BibliotecaAPI.Controllers
         //    return Ok(new { R1, R2 });  
         //}
 
-        [HttpGet("{id:int}")] // api/autores/id/id?incluirLibros=true | false
-        public async Task<ActionResult<Autor>> Get([FromRoute] int id, [FromHeader] bool incluirLibros) //Optener Autor  por id
+        [HttpGet("{id:int}", Name ="ObtenerAutor" ) ] // api/autores/id/id?incluirLibros=true | false
+        public async Task<ActionResult<Autor>> Get([FromRoute] int id) //Optener Autor  por id
         {
             var autor = await context.Autores.Include(x => x.Libros).FirstOrDefaultAsync(x => x.Id == id);
 
@@ -58,7 +64,7 @@ namespace BibliotecaAPI.Controllers
         {
             context.Add(autor);
             await context.SaveChangesAsync();   //cuando tenemos una operacion IO debes tener esta linea para que se gurden los combios
-            return Ok();
+            return CreatedAtRoute("ObtenerAutor",new {id =autor.Id},autor);
         }
 
         [HttpPut("{id:int}")]

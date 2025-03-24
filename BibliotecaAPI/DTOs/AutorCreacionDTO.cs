@@ -1,11 +1,9 @@
-﻿using BibliotecaAPI.Validaciones;
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 
-namespace BibliotecaAPI.Entidades
+namespace BibliotecaAPI.DTOs
 {
-    public class Autor  //Utilza esta clase para crear VALIDACIONES POR MODELO 
+    public class AutorCreacionDTO
     {
-        public int Id { get; set; }
         [StringLength(90, ErrorMessage = "El campo {0} debe tener {1} caracteres o menos")] //Estas son validaciones por atributo
         [Required(ErrorMessage = "El campo {0} nombre es Requerido")] //indicamos asp que si viene un autor desde uncliente debe tener un nombre si no lo tiene se rechaza la conexion
         // [PrimeraLetraMayuscula]
@@ -13,13 +11,9 @@ namespace BibliotecaAPI.Entidades
 
         [StringLength(90, ErrorMessage = "El campo {0} debe tener {1} caracteres o menos")]
         [Required(ErrorMessage = "El campo {0} nombre es Requerido")]
-        public required string Apellidos { get; set; } 
+        public required string Apellidos { get; set; }
 
         [StringLength(20, ErrorMessage = "El campo {0} debe tener {1} caracteres o menos")]
         public string? Identificacion { get; set; }
-
-        public List<Libro> Libros { get; set; } = new List<Libro>();
-
-   
     }
 }

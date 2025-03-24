@@ -1,4 +1,6 @@
-﻿using BibliotecaAPI.Datos;
+﻿using AutoMapper;
+using BibliotecaAPI.Datos;
+using BibliotecaAPI.DTOs;
 using BibliotecaAPI.Entidades;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -11,24 +13,25 @@ namespace BibliotecaAPI.Controllers
     {
         private readonly ApplicationDbContext context;
         private readonly ILogger<AutoresController> logger;
+        private readonly IMapper mapper;
 
-        public AutoresController(ApplicationDbContext context,ILogger <AutoresController> logger) //shorthand ctor tab crea contructor 
+        public AutoresController(ApplicationDbContext context,ILogger <AutoresController> logger,IMapper mapper) //shorthand ctor tab crea contructor 
         {
             this.context = context; //control punto crear y asignar campo
             this.logger = logger;
+            this.mapper = mapper;
         }
 
 
 
         [HttpGet]
         //retornamos un IEnumerable de los autores que seria una colecion Obtener todos losArores
-        public async Task<IEnumerable<Autor>> Get() {
-            logger.LogTrace("obteniendo el listado de autores");
-            logger.LogInformation("obteniendo listado de autores");//Ilogger permite mostar mesajes de lo que esta ocurriendo en la aplicacion 
-            logger.LogWarning("obteniendo el listado de autores"); //puedo modificarlos desde appsetingsJson para elegir cual se ejecute 
-            logger.LogCritical("obteniendo listado de autores");  //por defaoult es information. usa trace para bugs
+        public async Task<IEnumerable<AutorDTO>> Get() {
+       
 
-            return await context.Autores.ToListAsync<Autor>();
+            var autores= await context.Autores.ToListAsync<Autor>();
+            var autoresDTO = mapper.Map<IEnumerable<AutorDTO>>(autores);
+            return autoresDTO;
         }
 
         //REGLAS DE RUTEO
@@ -36,7 +39,7 @@ namespace BibliotecaAPI.Controllers
         [HttpGet("{nombre:alpha}")]//Ruteo con restricion de la variable de ruta alpha = string los demas tipo de datos son igual
         public async Task<IEnumerable<Autor>> Get(string nombre) 
         {
-            return await context.Autores.Where(x => x.Nombre.Contains(nombre)).ToListAsync();
+            return await context.Autores.Where(x => x.Nombres.Contains(nombre)).ToListAsync();
         
         }
         //[HttpGet("{R1}/{R2?}")]
@@ -47,7 +50,7 @@ namespace BibliotecaAPI.Controllers
         //}
 
         [HttpGet("{id:int}", Name ="ObtenerAutor" ) ] // api/autores/id/id?incluirLibros=true | false
-        public async Task<ActionResult<Autor>> Get([FromRoute] int id) //Optener Autor  por id
+        public async Task<ActionResult<AutorDTO>> Get([FromRoute] int id) //Optener Autor  por id
         {
             var autor = await context.Autores.Include(x => x.Libros).FirstOrDefaultAsync(x => x.Id == id);
 
@@ -55,25 +58,28 @@ namespace BibliotecaAPI.Controllers
             {
                 return NotFound();
             }
-            return Ok(autor);
+            var autorDTO =mapper.Map<AutorDTO>(autor);
+            return autorDTO;
         }
 
         [HttpPost]
         //la proramacion async me permite trabajar de mejor manera con operacion IO con operacion de nuestro sistemas hacia otros
-        public async Task<ActionResult> Post([FromBody]Autor autor)//Añadir Autor
+        public async Task<ActionResult> Post(AutorCreacionDTO autorCreacionDTO)//Añadir Autor
         {
+            var autor = mapper.Map<Autor>(autorCreacionDTO);
             context.Add(autor);
             await context.SaveChangesAsync();   //cuando tenemos una operacion IO debes tener esta linea para que se gurden los combios
-            return CreatedAtRoute("ObtenerAutor",new {id =autor.Id},autor);
+
+            var autorDTO = mapper.Map<AutorDTO>(autor); 
+            return CreatedAtRoute("ObtenerAutor",new {id =autor.Id}, autorDTO);
         }
 
         [HttpPut("{id:int}")]
-        public async Task<ActionResult> Put(int id, Autor autor) //modificar por id id
+        public async Task<ActionResult> Put(int id, AutorCreacionDTO autorCreacionDTO) //modificar por id id
         {
-            if (id != autor.Id)
-            {
-                return BadRequest("los id deben de coincidir");
-            }
+            var autor = mapper.Map<Autor>(autorCreacionDTO);
+            autor.Id = id;
+            
             context.Update(autor);
             await context.SaveChangesAsync();
             return Ok();

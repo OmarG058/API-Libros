@@ -1,4 +1,6 @@
-﻿using BibliotecaAPI.Datos;
+﻿using AutoMapper;
+using BibliotecaAPI.Datos;
+using BibliotecaAPI.DTOs;
 using BibliotecaAPI.Entidades;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -11,21 +13,25 @@ namespace BibliotecaAPI.Controllers
     public class LibrosController : ControllerBase
     {
         private readonly ApplicationDbContext context;
+        private readonly IMapper mapper;
 
-        public LibrosController(ApplicationDbContext context)
+        public LibrosController(ApplicationDbContext context, IMapper mapper )
         {
             this.context = context;
+            this.mapper = mapper;
         }
 
         [HttpGet]
-        public async Task<IEnumerable<Libro>> Get() // te devuelve los libros
+        public async Task<IEnumerable<LibroDTO>> Get() // te devuelve los libros
         {
-            return await context.Libros.Include(x => x.Autor).ToListAsync();
+            var libros = await context.Libros.Include(x => x.Autor).ToListAsync();
+            var librosDTO = mapper.Map<IEnumerable<LibroDTO>>(libros);
+            return librosDTO;
 
         }
 
         [HttpGet("{id:int}",Name ="ObtenerLibros")]
-        public async Task<ActionResult<Libro>> Get(int id)
+        public async Task<ActionResult<LibroDTO>> Get(int id)
         {
             var libro = await context.Libros.Include(x=>x.Autor).FirstOrDefaultAsync(x => x.Id == id);
 
@@ -33,13 +39,16 @@ namespace BibliotecaAPI.Controllers
             {
                 return NotFound();
             }
-            return libro;
+
+            var libroDTO = mapper.Map<LibroDTO>(libro);
+            return libroDTO;
 
         }
 
         [HttpPost]
-        public async Task<ActionResult> Post(Libro libro)
+        public async Task<ActionResult> Post(LibroCreacionDTO libroCreacionDTO)
         {
+            var libro = mapper.Map<Libro>(libroCreacionDTO);    
             var Existeautor = await context.Autores.AnyAsync(x => x.Id == libro.AutorId);
 
             //REALIZANDO UNA VALIDACION POR CONTROLADOR 
@@ -51,17 +60,17 @@ namespace BibliotecaAPI.Controllers
             }
             context.Libros.Add(libro);
             await context.SaveChangesAsync();
-            return CreatedAtRoute("ObtenerLibros", new{id = libro.Id},libro);
+
+            var libroDTO = mapper.Map<LibroDTO>(libro);
+            return CreatedAtRoute("ObtenerLibros", new{id = libro.Id}, libroDTO);
         }
 
         [HttpPut("{id:int}")]
-        public async Task<ActionResult> Put(int id,Libro libro) 
+        public async Task<ActionResult> Put(int id, LibroCreacionDTO libroCreacionDTO) 
         {
-            if (id != libro.Id) 
-            {
-                return BadRequest($"El id {id} del libro no coincide");    
-            }//verificar que el libro exista
-
+            var libro = mapper.Map<Libro>(libroCreacionDTO);
+            libro.Id = id;  
+           
             var Existeautor = await context.Autores.AnyAsync(x => x.Id == libro.AutorId);//verificar que el autor exista
 
             if (Existeautor == false)

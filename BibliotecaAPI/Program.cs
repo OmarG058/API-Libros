@@ -13,6 +13,8 @@ builder.Services.AddControllers().AddJsonOptions(opciones => opciones.JsonSerial
 builder.Services.AddDbContext<ApplicationDbContext>(
     opciones => opciones.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.AddAutoMapper(typeof(Program));
+
 
 Console.WriteLine($"Connection String: {builder.Configuration.GetConnectionString("DefaultConnection")}");
 
